@@ -1,0 +1,43 @@
+Creating Login:
+-----------------
+CREATE LOGIN luke WITH PASSWORD = '123456789'
+
+create user luke for login luke
+
+Getting Schema:
+----------------
+SELECT
+s.name AS SchemaName,
+t.name AS TableName
+FROM sys.tables t
+INNER JOIN sys.schemas s
+ON t.schema_id = s.schema_id
+WHERE s.name = 'SalesLT'
+
+Get access to user for all the tables:
+--------------------------------------
+USE AdventureWorksLT2019;
+
+GRANT SELECT ON SCHEMA::SalesLT TO mrk;
+
+Stored procedure used to create views that can be used in PBI:
+--------------------------------------------------------------
+USE gold_db
+GO
+
+CREATE OR ALTER PROC CreateSQLServerlessView_gold @ViewName nvarchar(100)
+AS 
+BEGIN
+    DECLARE @statement VARCHAR(MAX)
+    SET @statement = N'CREATE OR ALTER VIEW ' + @ViewName + ' AS
+        SELECT
+            *
+        FROM
+            OPENROWSET(
+                BULK ''https://sadataengineeringproj.dfs.core.windows.net/gold/SalesLT/' + @ViewName + '/'',
+                FORMAT = ''DELTA''
+            ) AS [result]'
+
+    EXEC (@statement)
+END
+GO
